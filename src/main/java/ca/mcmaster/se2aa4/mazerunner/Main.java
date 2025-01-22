@@ -72,8 +72,6 @@ class Maze {
             }
             System.out.println();
         }
-
-
     }
 
     public Maze(String maze_file) throws FileNotFoundException, IOException{
@@ -90,14 +88,31 @@ class Maze {
 
 class MazeExplorer {
 
-    // Maze will be its own class
-    // Inside the maze class will 
-
     private Maze maze;
+    private int[] coordinates = new int[2];
+    private char facing;
+
+    public void turn(char direction) {
+
+    }
+
+    public boolean checkWall(int x, int y) {
+
+    }
+
+    public int[] moveForward() {
+
+
+    }
+
+    public int[] findEntrance() {
+
+    }
 
     public MazeExplorer(Maze maze){
 
         this.maze = maze;
+        this.coordinates = findEntrance();
 
     }
 
