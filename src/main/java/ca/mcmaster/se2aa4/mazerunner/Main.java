@@ -99,16 +99,40 @@ class Maze {
 
 }
 
-class MazeExplorer {
+class NaiveAlgorithm extends MazeExplorer {
 
-    private char[][] grid;
-    private int rows;
-    private int cols;
+    public String solveMaze() {
+
+        coordinates = entrance_coordinates;
+        facing = 'E';
+        String path = "";
+
+        while (!atEnd(coordinates, exit_coordinates)) {
+            moveForward();
+            path += "F";
+        }
+
+        return path;
+    }
+
+    public NaiveAlgorithm(Maze maze) {
+        super(maze);
+    }
+
+}
+
+abstract class MazeExplorer {
+
+    protected char[][] grid;
+    protected int rows;
+    protected int cols;
     
-    private int[] entrance_coordinates = new int[2];
-    private int[] exit_coordinates = new int[2];
-    private int[] coordinates = new int[2];
-    private char facing;
+    protected int[] entrance_coordinates = new int[2];
+    protected int[] exit_coordinates = new int[2];
+    protected int[] coordinates = new int[2];
+    protected char facing;
+
+    public abstract String solveMaze();
 
     public void turn(char direction) {
 
@@ -189,6 +213,11 @@ class MazeExplorer {
             }
         }
     }
+    
+    public boolean atEnd(int[] current_coordinates, int[] ending_coordinates) {
+
+        return (current_coordinates[0] == ending_coordinates[0] && current_coordinates[1] == ending_coordinates[1]);
+    }
 
     public boolean testPath(String path, int[] starting_coordinates, char direction, int[] ending_coordinates) {
 
@@ -206,7 +235,7 @@ class MazeExplorer {
 
                 if (num_buffer.equals("")) {
                     
-                    if (coordinates[0] == ending_coordinates[0] && coordinates[1] == ending_coordinates[1]) {
+                    if (atEnd(coordinates, ending_coordinates)) {
                         return true;
                     }
                     else if (isNextMoveValid()) {
@@ -221,7 +250,7 @@ class MazeExplorer {
 
                     for (int j = 0; j<repetitions; j++) {
 
-                        if (coordinates[0] == ending_coordinates[0] && coordinates[1] == ending_coordinates[1]) {
+                        if (atEnd(coordinates, ending_coordinates)) {
                             return true;
                         }
                         else if (isNextMoveValid()) {
@@ -338,7 +367,7 @@ class MazeExplorer {
 
         this.entrance_coordinates = findEntrance();
         this.exit_coordinates = findExit();
-    
+
     }
 
 }
@@ -369,7 +398,7 @@ public class Main {
                 logger.info("Reading the maze from file " + maze_file);
                 
                 Maze maze = new Maze(maze_file);
-                MazeExplorer explorer = new MazeExplorer(maze);
+                NaiveAlgorithm explorer = new NaiveAlgorithm(maze);
 
                 if (cmd.hasOption("p")) {
 
@@ -390,7 +419,7 @@ public class Main {
                 }
                 else {
 
-                    maze.displayMaze();
+                    System.out.println("Path: " + explorer.solveMaze());
 
                 }
 
