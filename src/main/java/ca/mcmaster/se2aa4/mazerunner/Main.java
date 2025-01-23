@@ -1,6 +1,7 @@
 package ca.mcmaster.se2aa4.mazerunner;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -74,6 +75,18 @@ class Maze {
         }
     }
 
+    public char[][] getMaze() {
+        return maze;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public int getCols() {
+        return cols;
+    }
+
     public Maze(String maze_file) throws FileNotFoundException, IOException{
 
         int[] dimensions = getMazeDimensions(maze_file);
@@ -88,32 +101,64 @@ class Maze {
 
 class MazeExplorer {
 
-    private Maze maze;
+    private char[][] grid;
+    private int rows;
+    private int cols;
+    
+    private int[] entrance_coordinates = new int[2];
+    private int[] exit_coordinates = new int[2];
     private int[] coordinates = new int[2];
     private char facing;
 
-    public void turn(char direction) {
+    // public void turn(char direction) {
 
-    }
+    // }
 
-    public boolean checkWall(int x, int y) {
+    // public boolean checkWall(int x, int y) {
 
-    }
+    // }
 
-    public int[] moveForward() {
+    // public int[] moveForward() {
 
 
-    }
+    // }
 
     public int[] findEntrance() {
 
+        for (int i=0; i<rows; i++) {
+            if (grid[i][0] == ' ') {
+                int[] location = {i, 0};
+                return location;
+            }
+        }
+
+        int[] location = {-1, -1};
+        return location;
+
     }
 
-    public MazeExplorer(Maze maze){
+    public int[] findExit() {
 
-        this.maze = maze;
-        this.coordinates = findEntrance();
+        for (int i=0; i<rows; i++) {
+            if (grid[i][cols-1] == ' ') {
+                int[] location = {i, 0};
+                return location;
+            }
+        }
 
+        int[] location = {-1, -1};
+        return location;
+
+    }
+
+    public MazeExplorer(Maze maze) {
+
+        this.grid = maze.getMaze();
+        this.rows = maze.getRows();
+        this.cols = maze.getCols();
+
+        this.entrance_coordinates = findEntrance();
+        this.exit_coordinates = findExit();
     }
 
 }
