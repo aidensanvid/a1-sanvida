@@ -130,9 +130,129 @@ class MazeExplorer {
         }
     }
 
-    // public boolean checkWall(int x, int y) {
+    public boolean isNextMoveValid() {
 
-    // }
+        if (facing == 'N') {
+            if (coordinates[0] - 1 >= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else if (facing == 'E') {
+            if (coordinates[1] + 1 < cols) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else if (facing == 'S') {
+            if (coordinates[0] + 1 < rows) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            if (coordinates[1] - 1 >= cols) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+    }
+
+    public boolean testPath(String path, int[] starting_coordinates, char direction, int[] ending_coordinates) {
+
+        this.coordinates = starting_coordinates;
+        this.facing = direction;
+
+        String num_buffer = "";
+
+        path = path.replaceAll("\\s", "");
+
+        for (int i=0; i<path.length(); i++) {
+            char c = path.charAt(i);
+
+            if (c == 'F') {
+
+                if (num_buffer.equals("")) {
+                    
+                    if (coordinates[0] == ending_coordinates[0] && coordinates[1] == ending_coordinates[1]) {
+                        return true;
+                    }
+                    else if (isNextMoveValid()) {
+                        moveForward();
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else {
+                    int repetitions = Integer.parseInt(num_buffer);
+
+                    for (int j = 0; j<repetitions; j++) {
+
+                        if (coordinates[0] == ending_coordinates[0] && coordinates[1] == ending_coordinates[1]) {
+                            return true;
+                        }
+                        else if (isNextMoveValid()) {
+                            moveForward();
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                }
+
+                num_buffer = "";
+
+            }
+            else if (c == 'R') {
+
+                if (num_buffer.equals("")) {
+                    turn('R');
+                }
+                else {
+                    int repetitions = Integer.parseInt(num_buffer);
+
+                    for (int j = 0; j<repetitions; j++) {
+                        turn('R');
+                    }
+                }
+
+                num_buffer = "";
+
+            }
+            else if (c == 'L') {
+
+                if (num_buffer.equals("")) {
+                    turn('L');
+                }
+                else {
+                    int repetitions = Integer.parseInt(num_buffer);
+
+                    for (int j = 0; j<repetitions; j++) {
+                        turn('L');
+                    }
+                }
+
+                num_buffer = "";
+
+            }
+            else {
+                num_buffer += c;
+            }
+        }
+
+        return false;
+
+    }
 
 
     public void moveForward() {
