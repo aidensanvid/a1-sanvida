@@ -19,7 +19,7 @@ class Maze {
     private int rows;
     private int cols;
 
-    public int[] getMazeDimensions(String maze_file) throws FileNotFoundException, IOException{
+    public int[] getMazeDimensions(String maze_file) throws FileNotFoundException, IOException {
 
         int[] dimensions = new int[2];
 
@@ -110,18 +110,46 @@ class MazeExplorer {
     private int[] coordinates = new int[2];
     private char facing;
 
-    // public void turn(char direction) {
+    public void turn(char direction) {
 
-    // }
+        char[] directions = {'N', 'E', 'S', 'W'};
+
+        for (int i=0; i<directions.length; i++) {
+
+            if (directions[i] == facing) {
+
+                if (direction == 'L') {
+                    facing = directions[(i-1) % directions.length];
+                }
+                else {
+                    facing = directions[(i+1) % directions.length];
+                }
+                break;
+
+            }
+        }
+    }
 
     // public boolean checkWall(int x, int y) {
 
     // }
 
-    // public int[] moveForward() {
 
+    public void moveForward() {
 
-    // }
+        if (facing == 'N') {
+            coordinates[0] -= 1;
+        }
+        else if (facing == 'E') {
+            coordinates[1] += 1;
+        }
+        else if (facing == 'S') {
+            coordinates[0] += 1;
+        }
+        else {
+            coordinates[1] -= 1;
+        }
+    }
 
     public int[] findEntrance() {
 
@@ -159,6 +187,9 @@ class MazeExplorer {
 
         this.entrance_coordinates = findEntrance();
         this.exit_coordinates = findExit();
+
+        this.coordinates = this.entrance_coordinates;
+        this.facing = 'E';
     }
 
 }
