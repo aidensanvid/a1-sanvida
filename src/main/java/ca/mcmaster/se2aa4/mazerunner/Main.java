@@ -134,7 +134,13 @@ class MazeExplorer {
 
         if (facing == 'N') {
             if (coordinates[0] - 1 >= 0) {
-                return true;
+
+                if (grid[coordinates[0] - 1][coordinates[1]] == '#') {
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
             else {
                 return false;
@@ -142,7 +148,13 @@ class MazeExplorer {
         }
         else if (facing == 'E') {
             if (coordinates[1] + 1 < cols) {
-                return true;
+
+                if (grid[coordinates[0]][coordinates[1] + 1] == '#') {
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
             else {
                 return false;
@@ -150,7 +162,13 @@ class MazeExplorer {
         }
         else if (facing == 'S') {
             if (coordinates[0] + 1 < rows) {
-                return true;
+                
+                if (grid[coordinates[0] + 1][coordinates[1]] == '#') {
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
             else {
                 return false;
@@ -158,13 +176,18 @@ class MazeExplorer {
         }
         else {
             if (coordinates[1] - 1 >= cols) {
-                return true;
+
+                if (grid[coordinates[0]][coordinates[1] - 1] == '#') {
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
             else {
                 return false;
             }
         }
-
     }
 
     public boolean testPath(String path, int[] starting_coordinates, char direction, int[] ending_coordinates) {
@@ -274,7 +297,7 @@ class MazeExplorer {
     public int[] findEntrance() {
 
         for (int i=0; i<rows; i++) {
-            if (grid[i][0] == ' ') {
+            if (grid[i][0] != '#') {
                 int[] location = {i, 0};
                 return location;
             }
@@ -288,8 +311,8 @@ class MazeExplorer {
     public int[] findExit() {
 
         for (int i=0; i<rows; i++) {
-            if (grid[i][cols-1] == ' ') {
-                int[] location = {i, 0};
+            if (grid[i][cols-1] != '#') {
+                int[] location = {i, cols-1};
                 return location;
             }
         }
@@ -297,6 +320,14 @@ class MazeExplorer {
         int[] location = {-1, -1};
         return location;
 
+    }
+
+    public int[] getEntrance() {
+        return this.entrance_coordinates;
+    }
+
+    public int[] getExit() {
+        return this.exit_coordinates;
     }
 
     public MazeExplorer(Maze maze) {
@@ -307,9 +338,7 @@ class MazeExplorer {
 
         this.entrance_coordinates = findEntrance();
         this.exit_coordinates = findExit();
-
-        this.coordinates = this.entrance_coordinates;
-        this.facing = 'E';
+    
     }
 
 }
@@ -323,6 +352,7 @@ public class Main {
         // Generate flags accepted in command-line (-i)
         Options options = new Options();
         options.addOption("i", true, "select maze file");
+        options.addOption("p", true, "enter a canonical or factorized path through the maze");
 
         CommandLineParser parser = new DefaultParser();
 
@@ -340,7 +370,29 @@ public class Main {
                 
                 Maze maze = new Maze(maze_file);
                 MazeExplorer explorer = new MazeExplorer(maze);
-                maze.displayMaze();
+
+                if (cmd.hasOption("p")) {
+
+                    maze.displayMaze();
+
+                    String path = cmd.getOptionValue("p");
+
+                    boolean trial1 = explorer.testPath(path, explorer.getEntrance(), 'E', explorer.getExit());
+                    boolean trial2 = explorer.testPath(path, explorer.getExit(), 'W', explorer.getEntrance());
+
+                    if (trial1 || trial2) {
+                        System.out.println("correct path");
+                    }
+                    else {
+                        System.out.println("incorrect path");
+                    }
+
+                }
+                else {
+
+                    maze.displayMaze();
+
+                }
 
             }
             else{
