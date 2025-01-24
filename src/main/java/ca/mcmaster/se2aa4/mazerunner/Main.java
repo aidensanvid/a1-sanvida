@@ -19,6 +19,7 @@ class Maze {
     private int rows;
     private int cols;
 
+    // Retrieve the dimensions (rows x cols) of a maze in a file
     public int[] getMazeDimensions(String maze_file) throws FileNotFoundException, IOException {
 
         int[] dimensions = new int[2];
@@ -43,6 +44,7 @@ class Maze {
 
     }
 
+    // Load a maze from a selected file
     public char[][] loadMaze(String maze_file) throws FileNotFoundException, IOException {
 
         char[][] maze = new char[rows][cols];
@@ -65,6 +67,7 @@ class Maze {
         return maze;
     }
 
+    // Display maze to standard output
     public void displayMaze(){
 
         for (int row = 0; row<rows; row++) {
@@ -75,14 +78,17 @@ class Maze {
         }
     }
 
+    // Retrieve maze grid
     public char[][] getMaze() {
         return maze;
     }
 
+    // Retrieve number of rows
     public int getRows() {
         return rows;
     }
-
+    
+    // Retrieve number of columns   
     public int getCols() {
         return cols;
     }
@@ -101,6 +107,8 @@ class Maze {
 
 class NaiveAlgorithm extends MazeExplorer {
 
+    // Implements the abstract solveMaze() method of the MazeExplorer superclass
+    // Can be easily swapped for a more sophisticated algorithm
     public String solveMaze() {
 
         coordinates = entrance_coordinates;
@@ -134,10 +142,13 @@ abstract class MazeExplorer {
 
     public abstract String solveMaze();
 
+    // Turns the maze explorer left or right in-place
     public void turn(char direction) {
 
         char[] directions = {'N', 'E', 'S', 'W'};
 
+        // Rotates to the next direction, depending on whether the maze explorer turns left or right
+        // Left: N -> W, Right: N -> E
         for (int i=0; i<directions.length; i++) {
 
             if (directions[i] == facing) {
@@ -154,11 +165,16 @@ abstract class MazeExplorer {
         }
     }
 
+    // Ensures the next move the maze explorer makes is legal
     public boolean isNextMoveValid() {
 
+        // Checks the direction the maze explorer is currently facing (North, East, South, West)
         if (facing == 'N') {
+
+            // Checks the maze explorer doesn't move out of the maze bounds
             if (coordinates[0] - 1 >= 0) {
 
+                // Checks the maze explorer doesn't collide with a wall
                 if (grid[coordinates[0] - 1][coordinates[1]] == '#') {
                     return false;
                 }
@@ -171,8 +187,11 @@ abstract class MazeExplorer {
             }
         }
         else if (facing == 'E') {
+
+            // Checks the maze explorer doesn't move out of the maze bounds
             if (coordinates[1] + 1 < cols) {
 
+                // Checks the maze explorer doesn't collide with a wall
                 if (grid[coordinates[0]][coordinates[1] + 1] == '#') {
                     return false;
                 }
@@ -185,8 +204,11 @@ abstract class MazeExplorer {
             }
         }
         else if (facing == 'S') {
+
+            // Checks the maze explorer doesn't move out of the maze bounds
             if (coordinates[0] + 1 < rows) {
                 
+                // Checks the maze explorer doesn't collide with a wall
                 if (grid[coordinates[0] + 1][coordinates[1]] == '#') {
                     return false;
                 }
@@ -199,8 +221,11 @@ abstract class MazeExplorer {
             }
         }
         else {
+
+            // Checks the maze explorer doesn't move out of the maze bounds
             if (coordinates[1] - 1 >= cols) {
 
+                // Checks the maze explorer doesn't collide with a wall
                 if (grid[coordinates[0]][coordinates[1] - 1] == '#') {
                     return false;
                 }
@@ -213,12 +238,14 @@ abstract class MazeExplorer {
             }
         }
     }
-    
+
+    // Verifies the maze explorer reached the end of the maze
     public boolean atEnd(int[] current_coordinates, int[] ending_coordinates) {
 
         return (current_coordinates[0] == ending_coordinates[0] && current_coordinates[1] == ending_coordinates[1]);
     }
 
+    // Tests canonical, factorized (or both) paths for correctness
     public boolean testPath(String path, int[] starting_coordinates, char direction, int[] ending_coordinates) {
 
         this.coordinates = starting_coordinates;
@@ -226,6 +253,7 @@ abstract class MazeExplorer {
 
         String num_buffer = "";
 
+        // Removes whitespace from input path
         path = path.replaceAll("\\s", "");
 
         for (int i=0; i<path.length(); i++) {
@@ -233,6 +261,8 @@ abstract class MazeExplorer {
 
             if (c == 'F') {
 
+                // Processes canonical inputs (e.g. F, FFF, FF)
+                // Repeatedly moves forward until end of maze is reached, or an illegal move is made
                 if (num_buffer.equals("")) {
                     
                     if (atEnd(coordinates, ending_coordinates)) {
@@ -245,6 +275,8 @@ abstract class MazeExplorer {
                         return false;
                     }
                 }
+                // Processes factorized inputs (e.g. 4F, 2F, 19F)
+                // Repeatedly moves forward until end of maze is reached, or an illegal move is made
                 else {
                     int repetitions = Integer.parseInt(num_buffer);
 
@@ -267,9 +299,13 @@ abstract class MazeExplorer {
             }
             else if (c == 'R') {
 
+                // Processes canonical inputs (e.g. R, RR, RRR)
+                // Turns maze explorer right in-place
                 if (num_buffer.equals("")) {
                     turn('R');
                 }
+                // Processes factorized inputs (e.g. 2R, 4R, 27R)
+                // Turns maze explorer right in-place
                 else {
                     int repetitions = Integer.parseInt(num_buffer);
 
@@ -283,9 +319,13 @@ abstract class MazeExplorer {
             }
             else if (c == 'L') {
 
+                // Processes canonical inputs (e.g. L, LL, LLL)
+                // Turns maze explorer left in-place
                 if (num_buffer.equals("")) {
                     turn('L');
                 }
+                // Processes factorized inputs (e.g. 2L, 4L, 16L)
+                // Turns maze explorer left in-place
                 else {
                     int repetitions = Integer.parseInt(num_buffer);
 
@@ -297,6 +337,7 @@ abstract class MazeExplorer {
                 num_buffer = "";
 
             }
+            // Tracks the coefficient infront of factorized inputs in a numeric buffer
             else {
                 num_buffer += c;
             }
@@ -306,7 +347,7 @@ abstract class MazeExplorer {
 
     }
 
-
+    // Moves the maze explorer in the direction its currently facing
     public void moveForward() {
 
         if (facing == 'N') {
@@ -323,6 +364,7 @@ abstract class MazeExplorer {
         }
     }
 
+    // Locates the entrance of the maze
     public int[] findEntrance() {
 
         for (int i=0; i<rows; i++) {
@@ -337,6 +379,7 @@ abstract class MazeExplorer {
 
     }
 
+    // Locates the exit of the maze
     public int[] findExit() {
 
         for (int i=0; i<rows; i++) {
@@ -351,10 +394,13 @@ abstract class MazeExplorer {
 
     }
 
+    
+    // Retrieve entrance location
     public int[] getEntrance() {
         return this.entrance_coordinates;
     }
 
+    // Retrieve exit location
     public int[] getExit() {
         return this.exit_coordinates;
     }
@@ -399,12 +445,16 @@ public class Main {
                 
                 Maze maze = new Maze(maze_file);
                 NaiveAlgorithm explorer = new NaiveAlgorithm(maze);
+                
 
+                // Checks for user-entered path
                 if (cmd.hasOption("p")) {
 
                     maze.displayMaze();
 
                     String path = cmd.getOptionValue("p");
+
+                    // Attempts to enter the path from both ends of the maze
 
                     boolean trial1 = explorer.testPath(path, explorer.getEntrance(), 'E', explorer.getExit());
                     boolean trial2 = explorer.testPath(path, explorer.getExit(), 'W', explorer.getEntrance());
@@ -418,7 +468,8 @@ public class Main {
 
                 }
                 else {
-
+                    
+                    // Solves the maze if the user doesn't include their own path to verify
                     System.out.println("Path: " + explorer.solveMaze());
 
                 }
