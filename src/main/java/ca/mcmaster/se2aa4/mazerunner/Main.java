@@ -13,248 +13,86 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class Maze {
 
-    private char[][] maze;
-    private int rows;
-    private int cols;
+class RightHandPathFinder extends MazeExplorer {
 
-    // Retrieve the dimensions (rows x cols) of a maze in a file
-    public int[] getMazeDimensions(String maze_file) throws FileNotFoundException, IOException {
+     public String solveMaze(char entrance, char exit) {
 
-        int[] dimensions = new int[2];
 
-        int rows = 0;
-        int cols = 0;
-
-        BufferedReader reader = new BufferedReader(new FileReader(maze_file));
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            if (cols == 0) {
-                cols = line.length();
-            }
-            rows++;
+        if (entrance == 'W') {
+            facing = 'E';
+            location[0] = maze.getWestEntrance()[0];
+            location[1] = maze.getWestEntrance()[1];
+        }
+        else {
+            facing = 'W';
+            location[0] = maze.getEastEntrance()[0];
+            location[1] = maze.getEastEntrance()[1];
         }
 
-        dimensions[0] = rows;
-        dimensions[1] = cols;
-
-        return dimensions;
-
-    }
-
-    // Load a maze from a selected file
-    public char[][] loadMaze(String maze_file) throws FileNotFoundException, IOException {
-
-        char[][] maze = new char[rows][cols];
-
-        BufferedReader reader = new BufferedReader(new FileReader(maze_file));
-        String line;
-
-        int row = 0;
-        int col = 0;
-
-        while ((line = reader.readLine()) != null) {
-            for (int idx = 0; idx < line.length(); idx++) {
-                maze[row][col] = line.charAt(idx);
-                col++;
-            }
-            col = 0;
-            row++;
-        }
-
-        return maze;
-    }
-
-    // Display maze to standard output
-    public void displayMaze(){
-
-        for (int row = 0; row<rows; row++) {
-            for (int col = 0;col<cols;col++) {
-                System.out.print(maze[row][col]);
-            }
-            System.out.println();
-        }
-    }
-
-    // Retrieve maze grid
-    public char[][] getMaze() {
-        return maze;
-    }
-
-    // Retrieve number of rows
-    public int getRows() {
-        return rows;
-    }
-    
-    // Retrieve number of columns   
-    public int getCols() {
-        return cols;
-    }
-
-    public Maze(String maze_file) throws FileNotFoundException, IOException{
-
-        int[] dimensions = getMazeDimensions(maze_file);
-
-        this.rows = dimensions[0];
-        this.cols = dimensions[1];
-        this.maze = loadMaze(maze_file);
-
-    }
-
-}
-
-class NaiveAlgorithm extends MazeExplorer {
-
-    // Implements the abstract solveMaze() method of the MazeExplorer superclass
-    // Can be easily swapped for a more sophisticated algorithm
-    public String solveMaze() {
-
-        coordinates = entrance_coordinates;
-        facing = 'E';
         String path = "";
 
-        while (!atEnd(coordinates, exit_coordinates)) {
-            moveForward();
-            path += "F";
+        while (!maze.atEnd(location, exit)) {
+
+            turn('R');
+
+            if (isNextMoveValid()){
+                moveForward();
+
+                path += "RF";
+            }
+            else{
+                turn('L');
+                if (isNextMoveValid()) {
+                    moveForward();
+                    path += "F";
+                }
+                else {
+                    turn('L');
+                    path += "L";
+                }
+            }
         }
 
         return path;
     }
 
-    public NaiveAlgorithm(Maze maze) {
-        super(maze);
+    public RightHandPathFinder(String maze_file) throws IOException{
+        super(maze_file);
     }
 
 }
 
-abstract class MazeExplorer {
+class PathVerifier extends MazeExplorer {
 
-    protected char[][] grid;
-    protected int rows;
-    protected int cols;
-    
-    protected int[] entrance_coordinates = new int[2];
-    protected int[] exit_coordinates = new int[2];
-    protected int[] coordinates = new int[2];
-    protected char facing;
+    public boolean testPathEitherEntrance(String path) {
 
-    public abstract String solveMaze();
+        boolean west_entrance_result = testPath(path, 'W', 'E');
+        boolean east_entrance_result = testPath(path, 'E', 'W');
 
-    // Turns the maze explorer left or right in-place
-    public void turn(char direction) {
+        return (west_entrance_result || east_entrance_result);
 
-        char[] directions = {'N', 'E', 'S', 'W'};
-
-        // Rotates to the next direction, depending on whether the maze explorer turns left or right
-        // Left: N -> W, Right: N -> E
-        for (int i=0; i<directions.length; i++) {
-
-            if (directions[i] == facing) {
-
-                if (direction == 'L') {
-                    facing = directions[(i-1) % directions.length];
-                }
-                else {
-                    facing = directions[(i+1) % directions.length];
-                }
-                break;
-
-            }
-        }
     }
+ 
+    public boolean testPath(String path, char entrance, char exit) {
 
-    // Ensures the next move the maze explorer makes is legal
-    public boolean isNextMoveValid() {
+        if (entrance == 'W') {
+            facing = 'E';
+            location[0] = maze.getWestEntrance()[0];
+            location[1] = maze.getWestEntrance()[1];
 
-        // Checks the direction the maze explorer is currently facing (North, East, South, West)
-        if (facing == 'N') {
-
-            // Checks the maze explorer doesn't move out of the maze bounds
-            if (coordinates[0] - 1 >= 0) {
-
-                // Checks the maze explorer doesn't collide with a wall
-                if (grid[coordinates[0] - 1][coordinates[1]] == '#') {
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
-        }
-        else if (facing == 'E') {
-
-            // Checks the maze explorer doesn't move out of the maze bounds
-            if (coordinates[1] + 1 < cols) {
-
-                // Checks the maze explorer doesn't collide with a wall
-                if (grid[coordinates[0]][coordinates[1] + 1] == '#') {
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
-        }
-        else if (facing == 'S') {
-
-            // Checks the maze explorer doesn't move out of the maze bounds
-            if (coordinates[0] + 1 < rows) {
-                
-                // Checks the maze explorer doesn't collide with a wall
-                if (grid[coordinates[0] + 1][coordinates[1]] == '#') {
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
         }
         else {
-
-            // Checks the maze explorer doesn't move out of the maze bounds
-            if (coordinates[1] - 1 >= cols) {
-
-                // Checks the maze explorer doesn't collide with a wall
-                if (grid[coordinates[0]][coordinates[1] - 1] == '#') {
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
+            facing = 'W';
+            location[0] = maze.getEastEntrance()[0];
+            location[1] = maze.getEastEntrance()[1];
         }
-    }
-
-    // Verifies the maze explorer reached the end of the maze
-    public boolean atEnd(int[] current_coordinates, int[] ending_coordinates) {
-
-        return (current_coordinates[0] == ending_coordinates[0] && current_coordinates[1] == ending_coordinates[1]);
-    }
-
-    // Tests canonical, factorized (or both) paths for correctness
-    public boolean testPath(String path, int[] starting_coordinates, char direction, int[] ending_coordinates) {
-
-        this.coordinates = starting_coordinates;
-        this.facing = direction;
 
         String num_buffer = "";
 
         // Removes whitespace from input path
         path = path.replaceAll("\\s", "");
+
 
         for (int i=0; i<path.length(); i++) {
             char c = path.charAt(i);
@@ -265,11 +103,12 @@ abstract class MazeExplorer {
                 // Repeatedly moves forward until end of maze is reached, or an illegal move is made
                 if (num_buffer.equals("")) {
                     
-                    if (atEnd(coordinates, ending_coordinates)) {
-                        return true;
-                    }
-                    else if (isNextMoveValid()) {
+                    if (isNextMoveValid()) {
                         moveForward();
+
+                        if (maze.atEnd(location, exit)) {
+                            return true;
+                        }
                     }
                     else {
                         return false;
@@ -282,11 +121,13 @@ abstract class MazeExplorer {
 
                     for (int j = 0; j<repetitions; j++) {
 
-                        if (atEnd(coordinates, ending_coordinates)) {
-                            return true;
-                        }
-                        else if (isNextMoveValid()) {
+                        if (isNextMoveValid()) {
                             moveForward();
+
+                            if (maze.atEnd(location, exit)) {
+                                return true;
+                            }
+
                         }
                         else {
                             return false;
@@ -347,28 +188,192 @@ abstract class MazeExplorer {
 
     }
 
+    public PathVerifier(String maze_file) throws IOException{
+        super(maze_file);
+
+    }
+}
+
+class MazeExplorer {
+
+    protected Maze maze;
+    protected int[] location = new int[2];
+    protected char facing;
+
+    // Turns the maze explorer left or right in-place
+    public void turn(char direction) {
+
+        char[] directions = {'N', 'E', 'S', 'W'};
+
+        // Rotates to the next direction, depending on whether the maze explorer turns left or right
+        // Left: N -> W, Right: N -> E
+        for (int i=0; i<directions.length; i++) {
+
+            if (directions[i] == facing) {
+
+                if (direction == 'L') {
+                
+                    facing = directions[Math.floorMod(i-1, directions.length)];
+                }
+                else {
+                    facing = directions[Math.floorMod(i+1, directions.length)];
+                }
+                break;
+
+            }
+        }
+    }
+
+    // Ensures the next move the maze explorer makes is legal
+    public boolean isNextMoveValid() {
+
+        // Checks the direction the maze explorer is currently facing (North, East, South, West)
+        if (facing == 'N') {
+
+            int[] next_location = {location[0] - 1, location[1]};
+
+            // Checks the maze explorer doesn't move out of the maze bounds
+            if (maze.inBounds(next_location)) {
+                // Checks the maze explorer doesn't collide with a wall
+                if (maze.isWall(next_location)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else if (facing == 'E') {
+
+            int[] next_location = {location[0], location[1] + 1};
+
+            // Checks the maze explorer doesn't move out of the maze bounds
+            if (maze.inBounds(next_location)) {
+                // Checks the maze explorer doesn't collide with a wall
+                if (maze.isWall(next_location)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else if (facing == 'S') {
+
+            int[] next_location = {location[0] + 1, location[1]};
+
+            // Checks the maze explorer doesn't move out of the maze bounds
+            if (maze.inBounds(next_location)) {
+                // Checks the maze explorer doesn't collide with a wall
+                if (maze.isWall(next_location)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+
+            int[] next_location = {location[0], location[1] - 1};
+
+            // Checks the maze explorer doesn't move out of the maze bounds
+            if (maze.inBounds(next_location)) {
+                // Checks the maze explorer doesn't collide with a wall
+                if (maze.isWall(next_location)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
     // Moves the maze explorer in the direction its currently facing
     public void moveForward() {
 
         if (facing == 'N') {
-            coordinates[0] -= 1;
+            location[0] -= 1;
         }
         else if (facing == 'E') {
-            coordinates[1] += 1;
+            location[1] += 1;
         }
         else if (facing == 'S') {
-            coordinates[0] += 1;
+            location[0] += 1;
         }
         else {
-            coordinates[1] -= 1;
+            location[1] -= 1;
         }
     }
 
-    // Locates the entrance of the maze
-    public int[] findEntrance() {
+    public MazeExplorer (String maze_file) throws IOException {
+
+        this.maze = new Maze(maze_file);
+        
+    }
+
+}
+
+class Maze {
+
+    private char[][] maze;
+
+    private int rows;
+    private int cols;
+
+    private int[] westEntrance;
+    private int[] eastEntrance;
+
+    // Retrieve the dimensions (rows x cols) of a maze in a file
+    public int[] getMazeDimensions(String maze_file) throws FileNotFoundException, IOException {
+
+        int[] dimensions = new int[2];
+
+        int rows = 0;
+        int cols = 0;
+
+        BufferedReader reader = new BufferedReader(new FileReader(maze_file));
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            if (cols == 0) {
+                cols = line.length();
+            }
+            rows++;
+        }
+
+        dimensions[0] = rows;
+        dimensions[1] = cols;
+
+        return dimensions;
+
+    }
+
+    public int[] getWestEntrance() {
+        return westEntrance;
+    }
+
+    public int[] getEastEntrance() {
+        return eastEntrance;
+    }
+ 
+    public int[] findWestEntrance() {
 
         for (int i=0; i<rows; i++) {
-            if (grid[i][0] != '#') {
+            if (maze[i][0] != '#') {
                 int[] location = {i, 0};
                 return location;
             }
@@ -380,10 +385,10 @@ abstract class MazeExplorer {
     }
 
     // Locates the exit of the maze
-    public int[] findExit() {
+    public int[] findEastEntrance() {
 
         for (int i=0; i<rows; i++) {
-            if (grid[i][cols-1] != '#') {
+            if (maze[i][cols-1] != '#') {
                 int[] location = {i, cols-1};
                 return location;
             }
@@ -394,27 +399,63 @@ abstract class MazeExplorer {
 
     }
 
-    
-    // Retrieve entrance location
-    public int[] getEntrance() {
-        return this.entrance_coordinates;
+     public boolean atEnd(int[] coordinates, char exit) {
+
+        if (exit == 'W') {
+            return (coordinates[0] == westEntrance[0] && coordinates[1] == westEntrance[1]);
+        }
+        else {
+            return (coordinates[0] == eastEntrance[0] && coordinates[1] == eastEntrance[1]);
+        }
+        
     }
 
-    // Retrieve exit location
-    public int[] getExit() {
-        return this.exit_coordinates;
-    }
+    public boolean inBounds(int[] coordinates) {
 
-    public MazeExplorer(Maze maze) {
-
-        this.grid = maze.getMaze();
-        this.rows = maze.getRows();
-        this.cols = maze.getCols();
-
-        this.entrance_coordinates = findEntrance();
-        this.exit_coordinates = findExit();
+        return (coordinates[0] >= 0 && coordinates[0] < rows && coordinates[1] >= 0 && coordinates[1] < cols);
 
     }
+
+    public boolean isWall(int[] coordinates) {
+
+        return (maze[coordinates[0]][coordinates[1]] == '#');
+ 
+    }
+
+    // Load a maze from a selected file
+    public char[][] loadMaze(String maze_file) throws FileNotFoundException, IOException {
+
+        char[][] maze = new char[rows][cols];
+
+        BufferedReader reader = new BufferedReader(new FileReader(maze_file));
+        String line;
+
+        int row = 0;
+        int col = 0;
+
+        while ((line = reader.readLine()) != null) {
+            for (int idx = 0; idx < line.length(); idx++) {
+                maze[row][col] = line.charAt(idx);
+                col++;
+            }
+            col = 0;
+            row++;
+        }
+
+        return maze;
+    }
+
+    public Maze(String maze_file) throws FileNotFoundException, IOException{
+
+        int[] dimensions = getMazeDimensions(maze_file);
+
+        this.rows = dimensions[0];
+        this.cols = dimensions[1];
+        this.maze = loadMaze(maze_file);
+        this.westEntrance = findWestEntrance();
+        this.eastEntrance = findEastEntrance();
+    }
+
 
 }
 
@@ -443,34 +484,31 @@ public class Main {
                 logger.info("Starting Maze Runner");
                 logger.info("Reading the maze from file " + maze_file);
                 
-                Maze maze = new Maze(maze_file);
-                NaiveAlgorithm explorer = new NaiveAlgorithm(maze);
-                
 
                 // Checks for user-entered path
                 if (cmd.hasOption("p")) {
 
-                    maze.displayMaze();
 
                     String path = cmd.getOptionValue("p");
 
-                    // Attempts to enter the path from both ends of the maze
 
-                    boolean trial1 = explorer.testPath(path, explorer.getEntrance(), 'E', explorer.getExit());
-                    boolean trial2 = explorer.testPath(path, explorer.getExit(), 'W', explorer.getEntrance());
-
-                    if (trial1 || trial2) {
+                    PathVerifier path_verifier = new PathVerifier(maze_file);
+                    
+                    if (path_verifier.testPathEitherEntrance(path)) {
                         System.out.println("correct path");
                     }
                     else {
                         System.out.println("incorrect path");
                     }
 
+                    
                 }
                 else {
                     
+                    RightHandPathFinder path_finder = new RightHandPathFinder(maze_file);
+
                     // Solves the maze if the user doesn't include their own path to verify
-                    System.out.println("Path: " + explorer.solveMaze());
+                    System.out.println("Path: " + path_finder.solveMaze('W', 'E'));
 
                 }
 
