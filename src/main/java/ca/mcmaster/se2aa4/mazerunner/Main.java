@@ -16,7 +16,45 @@ import org.apache.logging.log4j.Logger;
 
 class RightHandPathFinder extends MazeExplorer {
 
-     public String solveMaze(char entrance, char exit) {
+    public String canonToFactorized(String path) {
+
+        String factorized = "";
+
+        char prev_char = ' ';
+        String buffer = "";
+
+        for (int i=0; i<path.length(); i++) {
+            char c = path.charAt(i);
+            
+            if (c == prev_char) {
+                buffer += c;
+            }
+            else {
+                
+                if (i > 0) {
+
+                    if (buffer.length() > 0) {
+                        factorized += buffer.length() + 1;
+                    }
+                    factorized += prev_char;
+                }
+
+                prev_char = c;
+                buffer = "";
+                
+            }
+        }
+
+        if (buffer.length() > 0) {
+            factorized += buffer.length() + 1;
+        }
+        
+        factorized += prev_char;
+        return factorized;
+
+    }
+
+    public String solveMaze(char entrance, char exit) {
 
 
         if (entrance == 'W') {
@@ -54,7 +92,9 @@ class RightHandPathFinder extends MazeExplorer {
             }
         }
 
-        return path;
+        String factorized = canonToFactorized(path);
+
+        return factorized;
     }
 
     public RightHandPathFinder(String maze_file) throws IOException{
