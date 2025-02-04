@@ -13,50 +13,20 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+interface PathFinderAlgorithm {
 
-class RightHandPathFinder extends MazeExplorer {
+    // Defines contract for algorithms to implement
 
-    public String canonToFactorized(String path) {
+    public String solveMaze(char entrance, char exit);
 
-        String factorized = "";
+}
 
-        char prev_char = ' ';
-        String buffer = "";
-
-        for (int i=0; i<path.length(); i++) {
-            char c = path.charAt(i);
-            
-            if (c == prev_char) {
-                buffer += c;
-            }
-            else {
-                
-                if (i > 0) {
-
-                    if (buffer.length() > 0) {
-                        factorized += buffer.length() + 1;
-                    }
-                    factorized += prev_char;
-                }
-
-                prev_char = c;
-                buffer = "";
-                
-            }
-        }
-
-        if (buffer.length() > 0) {
-            factorized += buffer.length() + 1;
-        }
-        
-        factorized += prev_char;
-        return factorized;
-
-    }
+class RightHandPathFinder extends MazeExplorer implements PathFinderAlgorithm {
 
     public String solveMaze(char entrance, char exit) {
 
 
+        // Determines starting location
         if (entrance == 'W') {
             facing = 'E';
             location[0] = maze.getWestEntrance()[0];
@@ -70,6 +40,7 @@ class RightHandPathFinder extends MazeExplorer {
 
         String path = "";
 
+        // Right-hand maze navigation algorithm
         while (!maze.atEnd(location, exit)) {
 
             turn('R');
@@ -110,12 +81,15 @@ class PathVerifier extends MazeExplorer {
         boolean west_entrance_result = testPath(path, 'W', 'E');
         boolean east_entrance_result = testPath(path, 'E', 'W');
 
+        // Checks if path works from either entrance
         return (west_entrance_result || east_entrance_result);
 
     }
- 
+
+    // Tests the path provided by the user
     public boolean testPath(String path, char entrance, char exit) {
 
+        // Determines the starting position of the maze explorer
         if (entrance == 'W') {
             facing = 'E';
             location[0] = maze.getWestEntrance()[0];
@@ -145,10 +119,6 @@ class PathVerifier extends MazeExplorer {
                     
                     if (isNextMoveValid()) {
                         moveForward();
-
-                        if (maze.atEnd(location, exit)) {
-                            return true;
-                        }
                     }
                     else {
                         return false;
@@ -163,10 +133,6 @@ class PathVerifier extends MazeExplorer {
 
                         if (isNextMoveValid()) {
                             moveForward();
-
-                            if (maze.atEnd(location, exit)) {
-                                return true;
-                            }
 
                         }
                         else {
@@ -224,7 +190,12 @@ class PathVerifier extends MazeExplorer {
             }
         }
 
-        return false;
+        if (maze.atEnd(location, exit)) {
+            return true;
+        }
+        else {
+            return false;
+        }
 
     }
 
@@ -359,6 +330,46 @@ class MazeExplorer {
         }
     }
 
+    // Converts canon path to factorized path
+
+    public String canonToFactorized(String path) {
+
+        String factorized = "";
+
+        char prev_char = ' ';
+        String buffer = "";
+
+        for (int i=0; i<path.length(); i++) {
+            char c = path.charAt(i);    
+            
+            if (c == prev_char) {
+                buffer += c;
+            }
+            else {
+                
+                if (i > 0) {
+
+                    if (buffer.length() > 0) {
+                        factorized += buffer.length() + 1;
+                    }
+                    factorized += prev_char;
+                }
+
+                prev_char = c;
+                buffer = "";
+                
+            }
+        }
+
+        if (buffer.length() > 0) {
+            factorized += buffer.length() + 1;
+        }
+        
+        factorized += prev_char;
+        return factorized;
+
+    }
+
     public MazeExplorer (String maze_file) throws IOException {
 
         this.maze = new Maze(maze_file);
@@ -402,14 +413,17 @@ class Maze {
 
     }
 
+    // Shares location of the west entrance
     public int[] getWestEntrance() {
         return westEntrance;
     }
 
+    // Shares location of the east entrance
     public int[] getEastEntrance() {
         return eastEntrance;
     }
- 
+    
+    // Locates the west entrance of the maze
     public int[] findWestEntrance() {
 
         for (int i=0; i<rows; i++) {
@@ -424,7 +438,7 @@ class Maze {
 
     }
 
-    // Locates the exit of the maze
+    // Locates the east entrance of the maze
     public int[] findEastEntrance() {
 
         for (int i=0; i<rows; i++) {
@@ -439,7 +453,8 @@ class Maze {
 
     }
 
-     public boolean atEnd(int[] coordinates, char exit) {
+    // Check if maze explorer has reached the end
+    public boolean atEnd(int[] coordinates, char exit) {
 
         if (exit == 'W') {
             return (coordinates[0] == westEntrance[0] && coordinates[1] == westEntrance[1]);
@@ -450,12 +465,14 @@ class Maze {
         
     }
 
+    // Check if maze explorer is within maze boundaries
     public boolean inBounds(int[] coordinates) {
 
         return (coordinates[0] >= 0 && coordinates[0] < rows && coordinates[1] >= 0 && coordinates[1] < cols);
 
     }
 
+    // Check if tile is a wall
     public boolean isWall(int[] coordinates) {
 
         return (maze[coordinates[0]][coordinates[1]] == '#');
@@ -531,9 +548,10 @@ public class Main {
 
                     String path = cmd.getOptionValue("p");
 
+                    // Verifies the user's provided path
 
                     PathVerifier path_verifier = new PathVerifier(maze_file);
-                    
+
                     if (path_verifier.testPathEitherEntrance(path)) {
                         System.out.println("correct path");
                     }
@@ -545,10 +563,10 @@ public class Main {
                 }
                 else {
                     
-                    RightHandPathFinder path_finder = new RightHandPathFinder(maze_file);
+                    PathFinderAlgorithm path_finder = new RightHandPathFinder(maze_file);
 
                     // Solves the maze if the user doesn't include their own path to verify
-                    System.out.println("Path: " + path_finder.solveMaze('W', 'E'));
+                    System.out.println(path_finder.solveMaze('W', 'E'));
 
                 }
 
